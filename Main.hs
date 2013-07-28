@@ -11,12 +11,16 @@ module Main where
         window <- G.windowNew
         scrolledWindow <- G.scrolledWindowNew Nothing Nothing
         webView <- GW.webViewNew
-        G.set window [ G.containerChild := scrolledWindow
+        G.set scrolledWindow [ G.containerChild := webView ]
+
+        singleColumn <- G.vBoxNew False 1
+        G.boxPackStart singleColumn scrolledWindow G.PackGrow 0
+
+        G.set window [ G.containerChild := singleColumn
                      , G.windowDefaultWidth := 600
                      , G.windowDefaultHeight := 600
                      , G.containerBorderWidth := 2
                      ]
-        G.set scrolledWindow [ G.containerChild := webView ]
         return (window, webView)
 
 
