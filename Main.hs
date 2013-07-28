@@ -7,36 +7,44 @@ module Main where
     import Control.Monad (void)
 
 
+    createOpenDialog = do
+        dialog <- G.fileChooserDialogNew 
+                    (Just "Choose a markup file")
+                    Nothing
+                    G.FileChooserActionOpen
+                    [("Ok", G.ResponseAccept), ("Cancel", G.ResponseCancel)]
+        textFileFilter <- G.fileFilterNew
+        G.fileFilterSetName textFileFilter "Text files"
+        G.fileFilterAddMimeType textFileFilter "text/plain"
+        G.fileChooserAddFilter dialog textFileFilter
+        markdownFilter <- G.fileFilterNew
+        G.fileFilterSetName markdownFilter "Markdown"
+        G.fileFilterAddPattern markdownFilter "*.md"
+        G.fileFilterAddPattern markdownFilter "*.markdown"
+        G.fileChooserAddFilter dialog markdownFilter
+        reStructuredTextFilter <- G.fileFilterNew
+        G.fileFilterSetName reStructuredTextFilter "reStructuredText"
+        G.fileFilterAddPattern reStructuredTextFilter "*.rst"
+        G.fileFilterAddPattern reStructuredTextFilter "*.rest"
+        G.fileFilterAddPattern reStructuredTextFilter "*.restx"
+        G.fileChooserAddFilter dialog reStructuredTextFilter
+        textileFilter <- G.fileFilterNew
+        G.fileFilterSetName textileFilter "Textile"
+        G.fileFilterAddPattern textileFilter "*.textile"
+        G.fileChooserAddFilter dialog textileFilter
+
+        return dialog
+
+
     createToolbar = do
         toolbar <- G.toolbarNew
         G.toolbarSetStyle toolbar G.ToolbarIcons
         openButton <- G.toolButtonNewFromStock "gtk-open"
         void $ G.onToolButtonClicked openButton $ do
-            dialog <- G.fileChooserDialogNew 
-                        (Just "Choose a markup file")
-                        Nothing
-                        G.FileChooserActionOpen
-                        [("Ok", G.ResponseAccept), ("Cancel", G.ResponseCancel)]
-            textFileFilter <- G.fileFilterNew
-            G.fileFilterSetName textFileFilter "Text files"
-            G.fileFilterAddMimeType textFileFilter "text/plain"
-            G.fileChooserAddFilter dialog textFileFilter
-            markdownFilter <- G.fileFilterNew
-            G.fileFilterSetName markdownFilter "Markdown"
-            G.fileFilterAddPattern markdownFilter "*.md"
-            G.fileFilterAddPattern markdownFilter "*.markdown"
-            G.fileChooserAddFilter dialog markdownFilter
-            reStructuredTextFilter <- G.fileFilterNew
-            G.fileFilterSetName reStructuredTextFilter "reStructuredText"
-            G.fileFilterAddPattern reStructuredTextFilter "*.rst"
-            G.fileFilterAddPattern reStructuredTextFilter "*.rest"
-            G.fileFilterAddPattern reStructuredTextFilter "*.restx"
-            G.fileChooserAddFilter dialog reStructuredTextFilter
-            textileFilter <- G.fileFilterNew
-            G.fileFilterSetName textileFilter "Textile"
-            G.fileFilterAddPattern textileFilter "*.textile"
-            G.fileChooserAddFilter dialog textileFilter
-            G.widgetShow dialog
+            openDialog <- createOpenDialog
+            dialogResponse <- G.dialogRun openDialog
+            G.widgetDestroy openDialog
+            print dialogResponse
 
         G.toolbarInsert toolbar openButton 0
 
