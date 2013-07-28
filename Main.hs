@@ -7,7 +7,7 @@ module Main where
     import Control.Monad (void)
 
 
-    createWindowAndView = do
+    createInterface = do
         window <- G.windowNew
         scrolledWindow <- G.scrolledWindowNew Nothing Nothing
         webView <- GW.webViewNew
@@ -20,11 +20,15 @@ module Main where
         return (window, webView)
 
 
-    main :: IO ()
-    main = do
+    withGUI f = do
         void $ G.initGUI
-        (window, webView) <- createWindowAndView
-        GW.webViewLoadUri webView "http://reddit.com"
+        window <- f
         G.onDestroy window G.mainQuit
         G.widgetShowAll window
         G.mainGUI
+
+    main :: IO ()
+    main = withGUI $ do
+        (window, webView) <- createInterface
+        GW.webViewLoadUri webView "http://reddit.com"
+        return window
