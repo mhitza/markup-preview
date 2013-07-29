@@ -9,6 +9,20 @@ module Main where
     import Control.Concurrent.Chan
     import Data.Maybe (isJust, fromJust)
 
+    import Text.Pandoc
+    import System.Directory (getTemporaryDirectory)
+    import System.IO.Temp (openTempFile)
+    import GHC.IO.Handle (hPutStr, hFlush)
+
+    import Debug.Trace
+
+    previewRST contents = 
+        let irDocument = readRST (def { readerStandalone = True }) contents
+        in writeHtmlString def irDocument
+
+    previewMarkdown contents =
+        let irDocument = readMarkdown (def { readerStandalone = True }) contents
+        in writeHtmlString def irDocument
 
     createOpenDialog = do
         dialog <- G.fileChooserDialogNew 
@@ -49,7 +63,10 @@ module Main where
             when (dialogResponse == G.ResponseAccept) $ do
                 filepath <- G.fileChooserGetFilename openDialog
                 when (isJust filepath) $ do
-                    writeChan loadChannel (fromJust filepath)
+                    fileFilter <- G.fileChooserGetFilter openDialog
+                    when (isJust fileFilter) $ do
+                        format <- G.fileFilterGetName $ fromJust fileFilter 
+                        writeChan loadChannel (format, fromJust filepath)
             G.widgetDestroy openDialog
 
         G.toolbarInsert toolbar openButton 0
@@ -87,9 +104,16 @@ module Main where
 
     main :: IO ()
     main = withGUI $ do
-        loadChannel <- newChan :: IO (Chan String)
+        loadChannel <- newChan :: IO (Chan (String, String))
         (window, webView) <- createInterface loadChannel
         forkIO $ forever $ do
-            filepath <- readChan loadChannel 
-            GW.webViewLoadUri webView ("file://" ++ filepath)
+            (format, filepath) <- readChan loadChannel 
+            contents <- readFile filepath
+            let htmlContent = case format of "reStructuredText" -> previewRST contents
+                                             "Markdown"         -> previewMarkdown contents
+                                             _                  -> contents
+            tempDirectory <- getTemporaryDirectory
+            (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview"
+            hPutStr tempHandle htmlContent >> hFlush tempHandle
+            GW.webViewLoadUri webView ("file://" ++ tempFilePath)
         return window
