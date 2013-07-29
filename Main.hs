@@ -15,6 +15,8 @@ module Main where
     import GHC.IO.Handle (hPutStr, hFlush)
     import System.Directory (getModificationTime)
 
+    import Paths_markup_preview
+
     import Debug.Trace
 
 
@@ -114,8 +116,10 @@ module Main where
 
     loadHtmlInView webView htmlContent = do
             tempDirectory <- getTemporaryDirectory
-            (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview"
-            hPutStr tempHandle htmlContent >> hFlush tempHandle
+            layout <- getDataFileName "Resources/layout.html" >>= \filepath -> readFile filepath
+            let htmlContent' = renderTemplate [("htmlContent", htmlContent)] layout
+            (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview.html"
+            hPutStr tempHandle htmlContent' >> hFlush tempHandle
             GW.webViewLoadUri webView ("file://" ++ tempFilePath)
 
 
