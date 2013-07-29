@@ -4,7 +4,10 @@ module Main where
     import qualified Graphics.UI.Gtk as G
     import qualified Graphics.UI.Gtk.WebKit.WebView as GW
 
-    import Control.Monad (void)
+    import Control.Monad (void, forever, when)
+    import Control.Concurrent (forkIO)
+    import Control.Concurrent.Chan
+    import Data.Maybe (isJust, fromJust)
 
 
     createOpenDialog = do
@@ -36,28 +39,31 @@ module Main where
         return dialog
 
 
-    createToolbar = do
+    createToolbar loadChannel = do
         toolbar <- G.toolbarNew
         G.toolbarSetStyle toolbar G.ToolbarIcons
         openButton <- G.toolButtonNewFromStock "gtk-open"
         void $ G.onToolButtonClicked openButton $ do
             openDialog <- createOpenDialog
             dialogResponse <- G.dialogRun openDialog
+            when (dialogResponse == G.ResponseAccept) $ do
+                filepath <- G.fileChooserGetFilename openDialog
+                when (isJust filepath) $ do
+                    writeChan loadChannel (fromJust filepath)
             G.widgetDestroy openDialog
-            print dialogResponse
 
         G.toolbarInsert toolbar openButton 0
 
         return toolbar
 
 
-    createInterface = do
+    createInterface loadChannel = do
         window <- G.windowNew
         scrolledWindow <- G.scrolledWindowNew Nothing Nothing
         webView <- GW.webViewNew
         G.set scrolledWindow [ G.containerChild := webView ]
         statusBar <- G.statusbarNew
-        toolBar <- createToolbar
+        toolBar <- createToolbar loadChannel
 
         singleColumn <- G.vBoxNew False 1
         G.boxPackStart singleColumn toolBar G.PackNatural 0
@@ -81,6 +87,9 @@ module Main where
 
     main :: IO ()
     main = withGUI $ do
-        (window, webView) <- createInterface
-        GW.webViewLoadUri webView "http://reddit.com"
+        loadChannel <- newChan :: IO (Chan String)
+        (window, webView) <- createInterface loadChannel
+        forkIO $ forever $ do
+            filepath <- readChan loadChannel 
+            GW.webViewLoadUri webView ("file://" ++ filepath)
         return window
