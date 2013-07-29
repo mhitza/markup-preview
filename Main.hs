@@ -10,10 +10,9 @@ module Main where
     import Data.Maybe (isJust, fromJust)
 
     import Text.Pandoc
-    import System.Directory (getTemporaryDirectory)
+    import System.Directory (getTemporaryDirectory, getModificationTime)
     import System.IO.Temp (openTempFile)
     import GHC.IO.Handle (hPutStr, hFlush)
-    import System.Directory (getModificationTime)
 
     import Paths_markup_preview
 
@@ -107,7 +106,7 @@ module Main where
 
 
     withGUI f = do
-        void $ G.initGUI
+        void G.initGUI
         window <- f
         G.onDestroy window G.mainQuit
         G.widgetShowAll window
