@@ -5,7 +5,7 @@ module Main where
     import qualified Graphics.UI.Gtk.WebKit.WebView as GW
 
     import Control.Monad (void, forever, when)
-    import Control.Concurrent (forkIO)
+    import Control.Concurrent (forkIO, threadDelay)
     import Control.Concurrent.MVar
     import Data.Maybe (isJust, fromJust)
 
@@ -13,16 +13,25 @@ module Main where
     import System.Directory (getTemporaryDirectory)
     import System.IO.Temp (openTempFile)
     import GHC.IO.Handle (hPutStr, hFlush)
+    import System.Directory (getModificationTime)
 
     import Debug.Trace
+
 
     previewRST contents = 
         let irDocument = readRST (def { readerStandalone = True }) contents
         in writeHtmlString def irDocument
 
+
     previewMarkdown contents =
         let irDocument = readMarkdown (def { readerStandalone = True }) contents
         in writeHtmlString def irDocument
+
+
+    generateHtml format contents = case format of "reStructuredText" -> previewRST contents
+                                                  "Markdown"         -> previewMarkdown contents
+                                                  _                  -> contents
+
 
     createOpenDialog = do
         dialog <- G.fileChooserDialogNew 
@@ -102,18 +111,37 @@ module Main where
         G.widgetShowAll window
         G.mainGUI
 
-    main :: IO ()
-    main = withGUI $ do
-        loadNotifier <- newEmptyMVar :: IO (MVar (String, String))
-        (window, webView) <- createInterface loadNotifier
-        forkIO $ forever $ do
-            (format, filepath) <- takeMVar loadNotifier 
-            contents <- readFile filepath
-            let htmlContent = case format of "reStructuredText" -> previewRST contents
-                                             "Markdown"         -> previewMarkdown contents
-                                             _                  -> contents
+
+    loadHtmlInView webView htmlContent = do
             tempDirectory <- getTemporaryDirectory
             (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview"
             hPutStr tempHandle htmlContent >> hFlush tempHandle
             GW.webViewLoadUri webView ("file://" ++ tempFilePath)
+
+
+    loaderReloader webView loadNotifier Nothing Nothing = do
+        threadDelay 500
+        (format, filepath) <- takeMVar loadNotifier
+        modificationTime <- getModificationTime filepath
+        contents <- readFile filepath
+        loadHtmlInView webView $ generateHtml format contents
+        loaderReloader webView loadNotifier (Just (format, filepath)) (Just modificationTime)
+
+    loaderReloader webView loadNotifier (Just (format, filepath)) (Just modificationTime) = do
+        threadDelay 500
+        noNewFile <- isEmptyMVar loadNotifier
+        if noNewFile
+            then do modificationTime' <- getModificationTime filepath
+                    when (modificationTime' /= modificationTime) $ do
+                        contents <- readFile filepath
+                        loadHtmlInView webView $ generateHtml format contents
+                    loaderReloader webView loadNotifier (Just (format, filepath)) (Just modificationTime')
+            else loaderReloader webView loadNotifier Nothing Nothing
+
+
+    main :: IO ()
+    main = withGUI $ do
+        loadNotifier <- newEmptyMVar :: IO (MVar (String, String))
+        (window, webView) <- createInterface loadNotifier
+        forkIO $ loaderReloader webView loadNotifier Nothing Nothing
         return window
