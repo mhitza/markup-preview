@@ -6,7 +6,7 @@ module Main where
 
     import Control.Monad (void, forever, when)
     import Control.Concurrent (forkIO)
-    import Control.Concurrent.Chan
+    import Control.Concurrent.MVar
     import Data.Maybe (isJust, fromJust)
 
     import Text.Pandoc
@@ -53,7 +53,7 @@ module Main where
         return dialog
 
 
-    createToolbar loadChannel = do
+    createToolbar loadNotifier = do
         toolbar <- G.toolbarNew
         G.toolbarSetStyle toolbar G.ToolbarIcons
         openButton <- G.toolButtonNewFromStock "gtk-open"
@@ -66,7 +66,7 @@ module Main where
                     fileFilter <- G.fileChooserGetFilter openDialog
                     when (isJust fileFilter) $ do
                         format <- G.fileFilterGetName $ fromJust fileFilter 
-                        writeChan loadChannel (format, fromJust filepath)
+                        putMVar loadNotifier (format, fromJust filepath)
             G.widgetDestroy openDialog
 
         G.toolbarInsert toolbar openButton 0
@@ -74,13 +74,13 @@ module Main where
         return toolbar
 
 
-    createInterface loadChannel = do
+    createInterface loadNotifier = do
         window <- G.windowNew
         scrolledWindow <- G.scrolledWindowNew Nothing Nothing
         webView <- GW.webViewNew
         G.set scrolledWindow [ G.containerChild := webView ]
         statusBar <- G.statusbarNew
-        toolBar <- createToolbar loadChannel
+        toolBar <- createToolbar loadNotifier
 
         singleColumn <- G.vBoxNew False 1
         G.boxPackStart singleColumn toolBar G.PackNatural 0
@@ -104,10 +104,10 @@ module Main where
 
     main :: IO ()
     main = withGUI $ do
-        loadChannel <- newChan :: IO (Chan (String, String))
-        (window, webView) <- createInterface loadChannel
+        loadNotifier <- newEmptyMVar :: IO (MVar (String, String))
+        (window, webView) <- createInterface loadNotifier
         forkIO $ forever $ do
-            (format, filepath) <- readChan loadChannel 
+            (format, filepath) <- takeMVar loadNotifier 
             contents <- readFile filepath
             let htmlContent = case format of "reStructuredText" -> previewRST contents
                                              "Markdown"         -> previewMarkdown contents
