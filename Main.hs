@@ -24,12 +24,18 @@ module Main where
         in writeHtmlString def irDocument
 
 
+    previewTextile contents =
+        let irDocument = readTextile (def { readerStandalone = True }) contents
+        in writeHtmlString def irDocument
+
+
     previewMarkdown contents =
         let irDocument = readMarkdown (def { readerStandalone = True }) contents
         in writeHtmlString def irDocument
 
 
     generateHtml format contents = case format of "reStructuredText" -> previewRST contents
+                                                  "Textile"          -> previewTextile contents
                                                   "Markdown"         -> previewMarkdown contents
                                                   _                  -> contents
 
