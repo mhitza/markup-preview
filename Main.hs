@@ -46,10 +46,6 @@ module Main where
                     Nothing
                     G.FileChooserActionOpen
                     [("Ok", G.ResponseAccept), ("Cancel", G.ResponseCancel)]
-        textFileFilter <- G.fileFilterNew
-        G.fileFilterSetName textFileFilter "Text files"
-        G.fileFilterAddMimeType textFileFilter "text/plain"
-        G.fileChooserAddFilter dialog textFileFilter
         markdownFilter <- G.fileFilterNew
         G.fileFilterSetName markdownFilter "Markdown"
         G.fileFilterAddPattern markdownFilter "*.md"
