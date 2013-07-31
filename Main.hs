@@ -60,7 +60,6 @@ module Main where
                     fileFilter <- MaybeT $  G.fileChooserGetFilter openDialog
                     format <- lift $ G.fileFilterGetName fileFilter 
                     return (format, filepath)
-                print response
                 when (isJust response) $ putMVar loadNotifier (fromJust response)
             G.widgetDestroy openDialog
 
