@@ -13,6 +13,8 @@ module Main where
     import System.Directory (getTemporaryDirectory, getModificationTime)
     import System.IO.Temp (openTempFile)
     import GHC.IO.Handle (hPutStr, hFlush)
+    import Control.Monad.Trans (lift)
+    import Control.Monad.Trans.Maybe
 
     import Paths_markup_preview
 
@@ -53,12 +55,13 @@ module Main where
             openDialog <- createOpenDialog
             dialogResponse <- G.dialogRun openDialog
             when (dialogResponse == G.ResponseAccept) $ do
-                filepath <- G.fileChooserGetFilename openDialog
-                when (isJust filepath) $ do
-                    fileFilter <- G.fileChooserGetFilter openDialog
-                    when (isJust fileFilter) $ do
-                        format <- G.fileFilterGetName $ fromJust fileFilter 
-                        putMVar loadNotifier (format, fromJust filepath)
+                response <- runMaybeT $ do
+                    filepath <- MaybeT $ G.fileChooserGetFilename openDialog
+                    fileFilter <- MaybeT $  G.fileChooserGetFilter openDialog
+                    format <- lift $ G.fileFilterGetName fileFilter 
+                    return (format, filepath)
+                print response
+                when (isJust response) $ putMVar loadNotifier (fromJust response)
             G.widgetDestroy openDialog
 
         G.toolbarInsert toolbar openButton 0
