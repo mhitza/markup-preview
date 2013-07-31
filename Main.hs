@@ -19,25 +19,17 @@ module Main where
     import Debug.Trace
 
 
-    previewRST contents = 
-        let irDocument = readRST (def { readerStandalone = True }) contents
-        in writeHtmlString def irDocument
+    generateHtml format contents = writeHtmlString def intermediaryDocument where
+        intermediaryDocument = 
+            let reader = fromJust $ lookup format [("Markdown", readMarkdown), ("reStructuredText", readRST), ("Textile", readTextile)]
+            in reader (def { readerStandalone = True }) contents
 
 
-    previewTextile contents =
-        let irDocument = readTextile (def { readerStandalone = True }) contents
-        in writeHtmlString def irDocument
-
-
-    previewMarkdown contents =
-        let irDocument = readMarkdown (def { readerStandalone = True }) contents
-        in writeHtmlString def irDocument
-
-
-    generateHtml format contents = case format of "reStructuredText" -> previewRST contents
-                                                  "Textile"          -> previewTextile contents
-                                                  "Markdown"         -> previewMarkdown contents
-                                                  _                  -> contents
+    createFilter name filepatterns = do
+        fileFilter <- G.fileFilterNew
+        mapM_ (G.fileFilterAddPattern fileFilter) filepatterns
+        G.fileFilterSetName fileFilter name
+        return fileFilter
 
 
     createOpenDialog = do
@@ -46,20 +38,11 @@ module Main where
                     Nothing
                     G.FileChooserActionOpen
                     [("Ok", G.ResponseAccept), ("Cancel", G.ResponseCancel)]
-        markdownFilter <- G.fileFilterNew
-        G.fileFilterSetName markdownFilter "Markdown"
-        G.fileFilterAddPattern markdownFilter "*.md"
-        G.fileFilterAddPattern markdownFilter "*.markdown"
+        markdownFilter <- createFilter "Markdown" ["*.md", "*.markdown"]
         G.fileChooserAddFilter dialog markdownFilter
-        reStructuredTextFilter <- G.fileFilterNew
-        G.fileFilterSetName reStructuredTextFilter "reStructuredText"
-        G.fileFilterAddPattern reStructuredTextFilter "*.rst"
-        G.fileFilterAddPattern reStructuredTextFilter "*.rest"
-        G.fileFilterAddPattern reStructuredTextFilter "*.restx"
+        reStructuredTextFilter <- createFilter "reStructuredText" ["*.rst", "*.rest", "*.restx"]
         G.fileChooserAddFilter dialog reStructuredTextFilter
-        textileFilter <- G.fileFilterNew
-        G.fileFilterSetName textileFilter "Textile"
-        G.fileFilterAddPattern textileFilter "*.textile"
+        textileFilter <- createFilter "Textile" ["*.textile"]
         G.fileChooserAddFilter dialog textileFilter
 
         return dialog
