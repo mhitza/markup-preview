@@ -38,12 +38,9 @@ module Main where
                     Nothing
                     G.FileChooserActionOpen
                     [("Ok", G.ResponseAccept), ("Cancel", G.ResponseCancel)]
-        markdownFilter <- createFilter "Markdown" ["*.md", "*.markdown"]
-        G.fileChooserAddFilter dialog markdownFilter
-        reStructuredTextFilter <- createFilter "reStructuredText" ["*.rst", "*.rest", "*.restx"]
-        G.fileChooserAddFilter dialog reStructuredTextFilter
-        textileFilter <- createFilter "Textile" ["*.textile"]
-        G.fileChooserAddFilter dialog textileFilter
+        createFilter "Markdown" ["*.md", "*.markdown"] >>= G.fileChooserAddFilter dialog
+        createFilter "reStructuredText" ["*.rst", "*.rest", "*.restx"] >>= G.fileChooserAddFilter dialog 
+        createFilter "Textile" ["*.textile"] >>= G.fileChooserAddFilter dialog 
 
         return dialog
 
