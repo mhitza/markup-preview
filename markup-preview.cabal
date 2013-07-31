@@ -19,4 +19,4 @@ executable markup-preview
   main-is:             Main.hs
   ghc-options:         -threaded -O
   other-modules:       Paths_markup_preview
-  build-depends:       base ==4.5.*, gtk ==0.12.*, webkit ==0.12.*, pandoc ==1.11.*, directory ==1.1.*, temporary ==1.1.*
+  build-depends:       base, gtk, webkit, pandoc, directory, temporary 
