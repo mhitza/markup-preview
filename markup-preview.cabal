@@ -7,7 +7,7 @@ synopsis:            A simple markup document preview (markdown, textile, reStru
 description:         A GUI application that renders the markup documents (markdown, textile, reStructuredText) into
                      HTML and presents them into a web view. It also reloads the content automatically when the source
                      file changes.
-license:             Apache-2.0
+license:             OtherLicense
 license-file:        LICENSE
 author:              Marius Ghita
 maintainer:          mhitza@gmail.com
