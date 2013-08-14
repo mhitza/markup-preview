@@ -1,22 +1,26 @@
 module Main where
 
+    -- GUI related imports
     import Graphics.UI.Gtk (AttrOp((:=)))
     import qualified Graphics.UI.Gtk as G
     import qualified Graphics.UI.Gtk.WebKit.WebView as GW
 
+    -- logic related imports
     import Control.Monad (void, forever, when)
     import System.Posix.Process (forkProcess)
     import Control.Concurrent (forkIO, threadDelay)
     import Control.Concurrent.MVar
     import Data.Maybe (isJust, fromJust)
+    import Control.Monad.Trans (lift)
+    import Control.Monad.Trans.Maybe
 
+    -- transformation related imports
     import Text.Pandoc
     import System.Directory (getTemporaryDirectory, getModificationTime)
     import System.IO.Temp (openTempFile)
     import GHC.IO.Handle (hPutStr, hFlush)
-    import Control.Monad.Trans (lift)
-    import Control.Monad.Trans.Maybe
 
+    -- misc
     import Paths_markup_preview
 
     import Debug.Trace
