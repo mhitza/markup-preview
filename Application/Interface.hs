@@ -11,13 +11,14 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
     import Control.Monad.Trans (lift)
     import Control.Monad.Trans.Maybe
     import Data.Maybe (isJust, fromJust)
-    import Control.Concurrent.MVar (putMVar)
+    import Control.Concurrent.MVar
     import GHC.IO.Handle (hPutStr, hFlush)
-    import System.Directory (getTemporaryDirectory, getModificationTime)
+    import System.Directory (getTemporaryDirectory)
     import System.IO.Temp (openTempFile)
     import Text.Pandoc (renderTemplate)
 
 
+    createFilter :: String -> [String] -> IO G.FileFilter
     createFilter name filepatterns = do
         fileFilter <- G.fileFilterNew
         mapM_ (G.fileFilterAddPattern fileFilter) filepatterns
@@ -25,6 +26,7 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
         return fileFilter
 
 
+    createOpenDialog :: IO G.FileChooserDialog
     createOpenDialog = do
         dialog <- G.fileChooserDialogNew 
                     (Just "Choose a markup file")
@@ -38,6 +40,7 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
         return dialog
 
 
+    createToolbar :: MVar (String, FilePath) -> IO G.Toolbar
     createToolbar loadNotifier = do
         toolbar <- G.toolbarNew
         G.toolbarSetStyle toolbar G.ToolbarIcons
@@ -59,6 +62,7 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
         return toolbar
 
 
+    createInterface :: MVar (String, FilePath) -> IO (G.Window, GW.WebView)
     createInterface loadNotifier = do
         window <- G.windowNew
         scrolledWindow <- G.scrolledWindowNew Nothing Nothing
@@ -80,6 +84,7 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
         return (window, webView)
 
 
+    loadHtmlInView :: GW.WebViewClass self => self -> [Char] -> IO ()
     loadHtmlInView webView htmlContent = do
             tempDirectory <- getTemporaryDirectory
             layout <- getDataFileName "Resources/layout.html" >>= \filepath -> readFile filepath
@@ -89,9 +94,10 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
             GW.webViewLoadUri webView ("file://" ++ tempFilePath)
 
 
+    withGUI :: G.WidgetClass self => IO self -> IO ()
     withGUI f = do
         void G.initGUI
         window <- f
-        G.onDestroy window G.mainQuit
+        void $ G.onDestroy window G.mainQuit
         G.widgetShowAll window
         G.mainGUI
