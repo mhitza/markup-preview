@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Application.Interface (withGUI, createInterface, loadHtmlInView) where
 
 
@@ -5,7 +6,9 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
     import qualified Graphics.UI.Gtk as G
     import qualified Graphics.UI.Gtk.WebKit.WebView as GW
 
+#ifdef CABAL
     import Paths_markup_preview
+#endif
 
     import Control.Monad (void, when)
     import Control.Monad.Trans (lift)
@@ -84,10 +87,18 @@ module Application.Interface (withGUI, createInterface, loadHtmlInView) where
         return (window, webView)
 
 
+    readResource :: FilePath -> IO String
+#ifdef CABAL
+    readResource filepath = getDataFileName filepath >>= \filepath' -> readFile filepath'
+#endif
+#ifndef CABAL
+    readResource filepath = readFile filepath
+#endif
+
     loadHtmlInView :: GW.WebViewClass self => self -> [Char] -> IO ()
     loadHtmlInView webView htmlContent = do
             tempDirectory <- getTemporaryDirectory
-            layout <- getDataFileName "Resources/layout.html" >>= \filepath -> readFile filepath
+            layout <- readResource "Resources/layout.html"
             let htmlContent' = renderTemplate [("htmlContent", htmlContent)] layout
             (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview.html"
             hPutStr tempHandle htmlContent' >> hFlush tempHandle

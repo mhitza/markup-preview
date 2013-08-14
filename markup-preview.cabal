@@ -24,5 +24,6 @@ source-repository head
 executable markup-preview
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts=none -Wall
+  cpp-options:         -DCABAL
   other-modules:       Paths_markup_preview
   build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, unix, time
