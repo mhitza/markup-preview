@@ -1,27 +1,34 @@
 module Main where
 
     import Application.Interface
+    import Graphics.UI.Gtk.WebKit.WebView (WebViewClass)
+    import Data.Time.Clock (UTCTime(..))
 
     -- logic related imports
-    import Control.Monad (void, forever, when)
+    import Control.Monad (void, when)
     import System.Posix.Process (forkProcess)
     import Control.Concurrent (forkIO, threadDelay)
     import Control.Concurrent.MVar
-    import Data.Maybe (isJust, fromJust)
+    import Data.Maybe (fromJust)
 
     -- transformation related imports
     import Text.Pandoc
-    import System.Directory (getTemporaryDirectory, getModificationTime)
-
-    import Debug.Trace
+    import System.Directory (getModificationTime)
 
 
+    generateHtml :: String -> String -> String
     generateHtml format contents = writeHtmlString def intermediaryDocument where
         intermediaryDocument = 
             let reader = fromJust $ lookup format [("Markdown", readMarkdown), ("reStructuredText", readRST), ("Textile", readTextile)]
             in reader (def { readerStandalone = True }) contents
 
 
+    loaderReloader :: WebViewClass self
+                   => self
+                   -> MVar (String, FilePath)
+                   -> Maybe (String, FilePath)
+                   -> Maybe UTCTime
+                   -> IO b
     loaderReloader webView loadNotifier Nothing Nothing = do
         threadDelay 500
         (format, filepath) <- takeMVar loadNotifier
@@ -46,5 +53,5 @@ module Main where
     main = void $ forkProcess $ withGUI $ do
         loadNotifier <- newEmptyMVar :: IO (MVar (String, String))
         (window, webView) <- createInterface loadNotifier
-        forkIO $ loaderReloader webView loadNotifier Nothing Nothing
+        void $ forkIO $ loaderReloader webView loadNotifier Nothing Nothing
         return window
