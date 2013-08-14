@@ -5,6 +5,7 @@ module Main where
     import qualified Graphics.UI.Gtk.WebKit.WebView as GW
 
     import Control.Monad (void, forever, when)
+    import System.Posix.Process (forkProcess)
     import Control.Concurrent (forkIO, threadDelay)
     import Control.Concurrent.MVar
     import Data.Maybe (isJust, fromJust)
@@ -127,7 +128,7 @@ module Main where
 
 
     main :: IO ()
-    main = withGUI $ do
+    main = void $ forkProcess $ withGUI $ do
         loadNotifier <- newEmptyMVar :: IO (MVar (String, String))
         (window, webView) <- createInterface loadNotifier
         forkIO $ loaderReloader webView loadNotifier Nothing Nothing
