@@ -23,6 +23,6 @@ source-repository head
 
 executable markup-preview
   main-is:             Main.hs
-  ghc-options:         -threaded
+  ghc-options:         -threaded -rtsopts=none
   other-modules:       Paths_markup_preview
   build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, unix
