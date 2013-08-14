@@ -1,4 +1,4 @@
-module Application.Interface where
+module Application.Interface (withGUI, createInterface, loadHtmlInView) where
 
 
     import Graphics.UI.Gtk (AttrOp((:=)))
