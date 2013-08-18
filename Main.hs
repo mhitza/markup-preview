@@ -1,6 +1,6 @@
 module Main where
 
-    import Application.Interface
+    import Application.GUI
     import Graphics.UI.Gtk.WebKit.WebView (WebViewClass)
     import Data.Time.Clock (UTCTime(..))
 

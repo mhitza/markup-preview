@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-module Application.Interface (withGUI, createInterface, loadHtmlInView) where
+module Application.GUI (withGUI, createInterface, loadHtmlInView) where
 
 
     import Graphics.UI.Gtk (AttrOp((:=)))
