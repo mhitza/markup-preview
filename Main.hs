@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams #-}
 module Main where
 
     import Application.GUI
@@ -23,8 +24,8 @@ module Main where
 
 
     main :: IO ()
-    main = withCommandLine $ \initialLoad -> withGUI $ do
-        loadNotifier <- createLoadNotifier initialLoad
+    main = withCommandLine $ withGUI $ do
+        loadNotifier <- createLoadNotifier ?initialLoad
         (window, webView) <- createInterface loadNotifier
         let loadInsideView r = renderHtml r >>= loadFile webView
         void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do

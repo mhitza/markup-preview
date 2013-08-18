@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams, RankNTypes #-}
 module Application.CommandLine (withCommandLine) where
 
     import Application.FileHandling
@@ -19,11 +20,11 @@ module Application.CommandLine (withCommandLine) where
     getArgumentFile filepath = flip (,) filepath <$> detectFiletype filepath
 
 
-    withCommandLine :: (Maybe (String, FilePath) -> IO ()) -> IO ()
+    withCommandLine :: ((?initialLoad :: Maybe (String, FilePath)) => IO ()) -> IO ()
     withCommandLine f = do
         args <- processArgs arguments
         let hasFlag flag = (flag, "") `elem` args
-        let initialLoad = lookup "file" args >>= getArgumentFile
+        let ?initialLoad = lookup "file" args >>= getArgumentFile
         if hasFlag "help"
             then print $ helpText [] HelpFormatDefault arguments
-            else f initialLoad
+            else f
