@@ -23,21 +23,21 @@ module Main where
 
 
     main :: IO ()
-    main = withCommandLine $ \initialLoad ->
-        withGUI $ do
-            loadNotifier <- createLoadNotifier initialLoad
-            (window, webView) <- createInterface loadNotifier
-            void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
-                threadDelay 500
-                if isNothing resource || isNothing modificationTime
-                    then do resource' <- takeMVar loadNotifier
-                            modificationTime' <- getModificationTime (snd resource')
-                            renderHtml resource' >>= loadFile webView
-                            return (Just resource', Just modificationTime')
-                    else do noNewFile <- isEmptyMVar loadNotifier
-                            if noNewFile
-                                then do modificationTime' <- getModificationTime (snd $ fromJust resource)
-                                        when (modificationTime' /= (fromJust modificationTime)) $ renderHtml (fromJust resource) >>= loadFile webView
-                                        return (resource, Just modificationTime')
-                                else return (Nothing, Nothing)
-            return window
+    main = withCommandLine $ \initialLoad -> withGUI $ do
+        loadNotifier <- createLoadNotifier initialLoad
+        (window, webView) <- createInterface loadNotifier
+        let loadInsideView r = renderHtml r >>= loadFile webView
+        void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
+            threadDelay 500
+            if isNothing resource || isNothing modificationTime
+                then do resource' <- takeMVar loadNotifier
+                        modificationTime' <- getModificationTime (snd resource')
+                        loadInsideView resource'
+                        return (Just resource', Just modificationTime')
+                else do noNewFile <- isEmptyMVar loadNotifier
+                        if noNewFile
+                            then do modificationTime' <- getModificationTime (snd $ fromJust resource)
+                                    when (modificationTime' /= (fromJust modificationTime)) $ loadInsideView (fromJust resource)
+                                    return (resource, Just modificationTime')
+                            else return (Nothing, Nothing)
+        return window
