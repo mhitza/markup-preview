@@ -1,90 +1,89 @@
 module Application.GUI (withGUI, createInterface, loadFile) where
 
-    import Graphics.UI.Gtk (AttrOp((:=)))
-    import qualified Graphics.UI.Gtk as G
-    import qualified Graphics.UI.Gtk.WebKit.WebView as GW
+    import Graphics.UI.Gtk
+    import Graphics.UI.Gtk.WebKit.WebView
 
-    import Control.Monad (void, when)
-    import Control.Monad.Trans (lift)
+    import Control.Monad
+    import Control.Monad.Trans
     import Control.Monad.Trans.Maybe
-    import Data.Maybe (isJust, fromJust)
+    import Data.Maybe
     import Control.Concurrent.MVar
 
 
-    loadFile :: GW.WebViewClass self => self -> String -> IO ()
-    loadFile webView filepath = GW.webViewLoadUri webView filepath
+    loadFile :: WebViewClass self => self -> String -> IO ()
+    loadFile webView filepath = webViewLoadUri webView filepath
 
 
-    createFilter :: String -> [String] -> IO G.FileFilter
+    createFilter :: String -> [String] -> IO FileFilter
     createFilter name filepatterns = do
-        fileFilter <- G.fileFilterNew
-        mapM_ (G.fileFilterAddPattern fileFilter) filepatterns
-        G.fileFilterSetName fileFilter name
+        fileFilter <- fileFilterNew
+        mapM_ (fileFilterAddPattern fileFilter) filepatterns
+        fileFilterSetName fileFilter name
         return fileFilter
 
 
-    createOpenDialog :: IO G.FileChooserDialog
+    createOpenDialog :: IO FileChooserDialog
     createOpenDialog = do
-        dialog <- G.fileChooserDialogNew 
+        dialog <- fileChooserDialogNew 
                     (Just "Choose a markup file")
                     Nothing
-                    G.FileChooserActionOpen
-                    [("Ok", G.ResponseAccept), ("Cancel", G.ResponseCancel)]
-        createFilter "Markdown" ["*.md", "*.markdown"] >>= G.fileChooserAddFilter dialog
-        createFilter "reStructuredText" ["*.rst", "*.rest", "*.restx"] >>= G.fileChooserAddFilter dialog 
-        createFilter "Textile" ["*.textile"] >>= G.fileChooserAddFilter dialog 
+                    FileChooserActionOpen
+                    [("Ok", ResponseAccept), ("Cancel", ResponseCancel)]
+        createFilter "Markdown" ["*.md", "*.markdown"] >>= fileChooserAddFilter dialog
+        createFilter "reStructuredText" ["*.rst", "*.rest", "*.restx"] >>= fileChooserAddFilter dialog 
+        createFilter "Textile" ["*.textile"] >>= fileChooserAddFilter dialog 
 
         return dialog
 
 
-    createToolbar :: MVar (String, FilePath) -> IO G.Toolbar
+    createToolbar :: MVar (String, FilePath) -> IO Toolbar
     createToolbar loadNotifier = do
-        toolbar <- G.toolbarNew
-        G.toolbarSetStyle toolbar G.ToolbarIcons
-        openButton <- G.toolButtonNewFromStock "gtk-open"
-        void $ G.onToolButtonClicked openButton $ do
+        toolbar <- toolbarNew
+        toolbarSetStyle toolbar ToolbarIcons
+        openButton <- toolButtonNewFromStock "gtk-open"
+        void $ onToolButtonClicked openButton $ do
             openDialog <- createOpenDialog
-            dialogResponse <- G.dialogRun openDialog
-            when (dialogResponse == G.ResponseAccept) $ do
-                response <- runMaybeT $ do
-                    filepath <- MaybeT $ G.fileChooserGetFilename openDialog
-                    fileFilter <- MaybeT $  G.fileChooserGetFilter openDialog
-                    format <- lift $ G.fileFilterGetName fileFilter 
+            dialogResponse' <- dialogRun openDialog
+            when (dialogResponse' == ResponseAccept) $ do
+                response' <- runMaybeT $ do
+                    filepath <- MaybeT $ fileChooserGetFilename openDialog
+                    fileFilter <- MaybeT $  fileChooserGetFilter openDialog
+                    format <- lift $ fileFilterGetName fileFilter 
                     return (format, filepath)
-                when (isJust response) $ putMVar loadNotifier (fromJust response)
-            G.widgetDestroy openDialog
+                when (isJust response') $ putMVar loadNotifier (fromJust response')
+            widgetDestroy openDialog
 
-        G.toolbarInsert toolbar openButton 0
+        toolbarInsert toolbar openButton 0
 
         return toolbar
 
 
-    createInterface :: MVar (String, FilePath) -> IO (G.Window, GW.WebView)
+    createInterface :: MVar (String, FilePath) -> IO (Window, WebView)
     createInterface loadNotifier = do
-        window <- G.windowNew
-        scrolledWindow <- G.scrolledWindowNew Nothing Nothing
-        webView <- GW.webViewNew
-        G.set scrolledWindow [ G.containerChild := webView ]
-        statusBar <- G.statusbarNew
+        window <- windowNew
+        scrolledWindow <- scrolledWindowNew Nothing Nothing
+        webView <- webViewNew
+        set scrolledWindow [ containerChild := webView ]
+        statusBar <- statusbarNew
         toolBar <- createToolbar loadNotifier
 
-        singleColumn <- G.vBoxNew False 1
-        G.boxPackStart singleColumn toolBar G.PackNatural 0
-        G.boxPackStart singleColumn scrolledWindow G.PackGrow 0
-        G.boxPackEnd singleColumn statusBar G.PackNatural 0
+        singleColumn <- vBoxNew False 1
+        boxPackStart singleColumn toolBar PackNatural 0
+        boxPackStart singleColumn scrolledWindow PackGrow 0
+        boxPackEnd singleColumn statusBar PackNatural 0
 
-        G.set window [ G.containerChild := singleColumn
-                     , G.windowDefaultWidth := 600
-                     , G.windowDefaultHeight := 600
-                     , G.containerBorderWidth := 1
+        set window [ containerChild := singleColumn
+                     , windowDefaultWidth := 600
+                     , windowDefaultHeight := 600
+                     , containerBorderWidth := 1
                      ]
         return (window, webView)
 
 
-    withGUI :: G.WidgetClass self => IO self -> IO ()
+    withGUI :: WidgetClass self => IO self -> IO ()
     withGUI f = do
-        void G.initGUI
+        void initGUI
         window <- f
-        void $ G.onDestroy window G.mainQuit
-        G.widgetShowAll window
-        G.mainGUI
+        void $ onDestroy window mainQuit
+        widgetShowAll window
+        mainGUI

@@ -5,13 +5,12 @@ module Main where
     import Application.FileHandling
 
     -- logic related imports
-    import Control.Monad (void, when)
-    import Control.Concurrent (forkIO, threadDelay)
-    import Control.Concurrent.MVar
-    import Data.Maybe (isNothing, fromJust)
+    import Control.Monad
+    import Control.Concurrent
+    import Data.Maybe
 
     -- transformation related imports
-    import System.Directory (getModificationTime)
+    import System.Directory
 
 
     loop :: Monad m => a -> (a -> m a) -> m a

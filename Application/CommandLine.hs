@@ -4,7 +4,7 @@ module Application.CommandLine (withCommandLine) where
 
     import System.Console.CmdArgs.Explicit
 
-    import Control.Applicative ((<$>))
+    import Control.Applicative
 
 
     arguments :: Mode [(String,String)]

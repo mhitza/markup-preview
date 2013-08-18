@@ -2,17 +2,17 @@
 module Application.FileHandling (detectFiletype, renderHtml) where
 
     import Text.Pandoc
-    import GHC.IO.Handle (hPutStr, hFlush)
-    import System.Directory (getTemporaryDirectory)
-    import System.IO.Temp (openTempFile)
+    import GHC.IO.Handle
+    import System.Directory
+    import System.IO.Temp
 
 #ifdef CABAL
     import Paths_markup_preview
 #endif
 
-    import Control.Applicative ((<$>))
-    import Data.List (isSuffixOf, find)
-    import Data.Maybe (fromJust)
+    import Control.Applicative
+    import Data.List
+    import Data.Maybe
 
 
     detectFiletype :: FilePath -> Maybe String
