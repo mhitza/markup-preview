@@ -26,4 +26,4 @@ executable markup-preview
   ghc-options:         -threaded -rtsopts=none -Wall
   cpp-options:         -DCABAL
   other-modules:       Paths_markup_preview
-  build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, unix, time
+  build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, unix, time, cmdargs
