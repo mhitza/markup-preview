@@ -17,11 +17,15 @@ module Main where
     loop a f = f a >>= \a' -> loop a' f
 
 
+    createLoadNotifier :: Maybe a -> IO (MVar a)
+    createLoadNotifier Nothing  = newEmptyMVar
+    createLoadNotifier (Just x) = newMVar x
+
+
     main :: IO ()
     main = withCommandLine $ \initialLoad ->
         withGUI $ do
-            loadNotifier <- case initialLoad of Just x  -> newMVar x
-                                                Nothing -> newEmptyMVar
+            loadNotifier <- createLoadNotifier initialLoad
             (window, webView) <- createInterface loadNotifier
             void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
                 threadDelay 500
