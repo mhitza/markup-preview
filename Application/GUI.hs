@@ -1,24 +1,14 @@
-{-# LANGUAGE CPP #-}
-module Application.GUI (withGUI, createInterface, loadHtmlInView) where
-
+module Application.GUI (withGUI, createInterface) where
 
     import Graphics.UI.Gtk (AttrOp((:=)))
     import qualified Graphics.UI.Gtk as G
     import qualified Graphics.UI.Gtk.WebKit.WebView as GW
-
-#ifdef CABAL
-    import Paths_markup_preview
-#endif
 
     import Control.Monad (void, when)
     import Control.Monad.Trans (lift)
     import Control.Monad.Trans.Maybe
     import Data.Maybe (isJust, fromJust)
     import Control.Concurrent.MVar
-    import GHC.IO.Handle (hPutStr, hFlush)
-    import System.Directory (getTemporaryDirectory)
-    import System.IO.Temp (openTempFile)
-    import Text.Pandoc (renderTemplate)
 
 
     createFilter :: String -> [String] -> IO G.FileFilter
@@ -85,24 +75,6 @@ module Application.GUI (withGUI, createInterface, loadHtmlInView) where
                      , G.containerBorderWidth := 1
                      ]
         return (window, webView)
-
-
-    readResource :: FilePath -> IO String
-#ifdef CABAL
-    readResource filepath = getDataFileName filepath >>= \filepath' -> readFile filepath'
-#endif
-#ifndef CABAL
-    readResource filepath = readFile filepath
-#endif
-
-    loadHtmlInView :: GW.WebViewClass self => self -> [Char] -> IO ()
-    loadHtmlInView webView htmlContent = do
-            tempDirectory <- getTemporaryDirectory
-            layout <- readResource "Resources/layout.html"
-            let htmlContent' = renderTemplate [("htmlContent", htmlContent)] layout
-            (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview.html"
-            hPutStr tempHandle htmlContent' >> hFlush tempHandle
-            GW.webViewLoadUri webView ("file://" ++ tempFilePath)
 
 
     withGUI :: G.WidgetClass self => IO self -> IO ()

@@ -1,9 +1,10 @@
 module Application.CommandLine (withCommandLine) where
 
+    import Application.FileHandling
+
     import System.Console.CmdArgs.Explicit
 
     import Control.Applicative ((<$>))
-    import Data.List (isSuffixOf, find)
 
 
     arguments :: Mode [(String,String)]
@@ -15,10 +16,7 @@ module Application.CommandLine (withCommandLine) where
 
 
     getArgumentFile :: FilePath -> Maybe (String, FilePath)
-    getArgumentFile filepath = flip (,) filepath . fst <$> find (any (`isSuffixOf` filepath) . snd)
-                                    [ ("Markdown", [".markdown", ".md"])
-                                    , ("Textile", [".textile"])
-                                    , ("reStructuredText", [".rst", ".rest", ".restx"]) ]
+    getArgumentFile filepath = flip (,) filepath <$> detectFiletype filepath
 
 
     withCommandLine :: (Maybe (String, FilePath) -> IO ()) -> IO ()
