@@ -1,12 +1,10 @@
 {-# LANGUAGE CPP #-}
-module Application.FileHandling where
+module Application.FileHandling (detectFiletype, renderHtml) where
 
-    import Text.Pandoc (renderTemplate)
+    import Text.Pandoc
     import GHC.IO.Handle (hPutStr, hFlush)
     import System.Directory (getTemporaryDirectory)
     import System.IO.Temp (openTempFile)
-
-    import qualified Graphics.UI.Gtk.WebKit.WebView as GW
 
 #ifdef CABAL
     import Paths_markup_preview
@@ -14,6 +12,7 @@ module Application.FileHandling where
 
     import Control.Applicative ((<$>))
     import Data.List (isSuffixOf, find)
+    import Data.Maybe (fromJust)
 
 
     detectFiletype :: FilePath -> Maybe String
@@ -32,10 +31,16 @@ module Application.FileHandling where
         readFile filepath
 #endif
 
-    loadHtmlInView webView htmlContent = do
+
+    renderHtml :: (String, FilePath) -> IO String
+    renderHtml (format, filepath) = readFile filepath >>= writeHtmlFile where
+        readerF = fromJust $ lookup format [("Markdown", readMarkdown), ("reStructuredText", readRST), ("Textile", readTextile)]
+        writer = writeHtmlString def
+        reader = readerF (def { readerStandalone = True })
+        writeHtmlFile content = do
             tempDirectory <- getTemporaryDirectory
             layout <- readResource "Resources/layout.html"
-            let htmlContent' = renderTemplate [("htmlContent", htmlContent)] layout
+            let htmlContent = renderTemplate [("htmlContent", writer $ reader content)] layout
             (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview.html"
-            hPutStr tempHandle htmlContent' >> hFlush tempHandle
-            GW.webViewLoadUri webView ("file://" ++ tempFilePath)
+            hPutStr tempHandle htmlContent >> hFlush tempHandle
+            return ("file://" ++ tempFilePath)

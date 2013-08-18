@@ -1,4 +1,4 @@
-module Application.GUI (withGUI, createInterface) where
+module Application.GUI (withGUI, createInterface, loadFile) where
 
     import Graphics.UI.Gtk (AttrOp((:=)))
     import qualified Graphics.UI.Gtk as G
@@ -9,6 +9,10 @@ module Application.GUI (withGUI, createInterface) where
     import Control.Monad.Trans.Maybe
     import Data.Maybe (isJust, fromJust)
     import Control.Concurrent.MVar
+
+
+    loadFile :: GW.WebViewClass self => self -> String -> IO ()
+    loadFile webView filepath = GW.webViewLoadUri webView filepath
 
 
     createFilter :: String -> [String] -> IO G.FileFilter
