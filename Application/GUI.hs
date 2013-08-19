@@ -1,4 +1,4 @@
-module Application.GUI (withGUI, createInterface, loadFile) where
+module Application.GUI (withGUI, createInterface, webViewLoadUri) where
 
     import Graphics.UI.Gtk
     import Graphics.UI.Gtk.WebKit.WebView
@@ -8,10 +8,6 @@ module Application.GUI (withGUI, createInterface, loadFile) where
     import Control.Monad.Trans.Maybe
     import Data.Maybe
     import Control.Concurrent.MVar
-
-
-    loadFile :: WebViewClass self => self -> String -> IO ()
-    loadFile webView filepath = webViewLoadUri webView filepath
 
 
     createFilter :: String -> [String] -> IO FileFilter

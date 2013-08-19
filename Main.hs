@@ -19,7 +19,7 @@ module Main where
 
 
     createLoadNotifier :: StartupOptions -> IO (MVar (String, FilePath))
-    createLoadNotifier o | can_load o = newMVar (fromJust $ filetype o, fromJust $ file o)
+    createLoadNotifier o | canLoad o = newMVar (fromJust $ filetype o, fromJust $ file o)
                          | otherwise = newEmptyMVar
 
 
@@ -27,7 +27,7 @@ module Main where
     main = withCommandLine $ withGUI $ do
         loadNotifier <- createLoadNotifier ?startupOptions
         (window, webView) <- createInterface loadNotifier
-        let loadInsideView r = renderHtml r >>= loadFile webView
+        let loadInsideView r = renderHtml r >>= webViewLoadUri webView
         void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
             threadDelay 500
             if isNothing resource || isNothing modificationTime
@@ -38,7 +38,7 @@ module Main where
                 else do noNewFile <- isEmptyMVar loadNotifier
                         if noNewFile
                             then do modificationTime' <- getModificationTime (snd $ fromJust resource)
-                                    when (modificationTime' /= (fromJust modificationTime)) $ loadInsideView (fromJust resource)
+                                    when (modificationTime' /= fromJust modificationTime) $ loadInsideView (fromJust resource)
                                     return (resource, Just modificationTime')
                             else return (Nothing, Nothing)
         return window
