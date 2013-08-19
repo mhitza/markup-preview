@@ -28,5 +28,8 @@ executable markup-preview
   main-is:             Main.hs
   ghc-options:         -threaded -Wall
   cpp-options:         -DCABAL
-  other-modules:       Paths_markup_preview
+  other-modules:       Paths_markup_preview,
+                       Application.FileHandling,
+                       Application.CommandLine,
+                       Application.GUI
   build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, cmdargs
