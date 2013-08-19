@@ -44,7 +44,7 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
 
     handleInformationRequest :: Arguments -> IO SkipExecution
     handleInformationRequest args 
-        | hasFlag "version" args = putStrLn "markup-preview 0.1.0.0" >> return True
+        | hasFlag "version" args = putStrLn "markup-preview 0.2" >> return True
         | hasFlag "help" args    = print (helpText [] HelpFormatDefault arguments) >> return True
         | otherwise              = return False
 
