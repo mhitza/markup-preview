@@ -1,14 +1,24 @@
 {-# LANGUAGE ImplicitParams, RankNTypes #-}
-module Application.CommandLine (withCommandLine) where
+module Application.CommandLine (withCommandLine, StartupOptions(..)) where
 
     import Application.FileHandling
 
     import System.Console.CmdArgs.Explicit
 
-    import Control.Applicative
+    import Data.Maybe
 
 
-    arguments :: Mode [(String,String)]
+    type SkipExecution = Bool
+    type ArgumentKey = String
+    type Arguments = [(ArgumentKey, String)]
+
+    data StartupOptions = StartupOptions
+                        { file :: Maybe FilePath
+                        , filetype :: Maybe String
+                        , can_load :: Bool }
+
+
+    arguments :: Mode Arguments
     arguments = mode "markup-preview" [] "" (flagArg (upd "file") "file")
         [ flagHelpSimple (("help",""):)
         , flagVersion (("version",""):)
@@ -16,15 +26,28 @@ module Application.CommandLine (withCommandLine) where
         where upd msg x v = Right $ (msg,x):v
 
 
-    getArgumentFile :: FilePath -> Maybe (String, FilePath)
-    getArgumentFile filepath = flip (,) filepath <$> detectFiletype filepath
+    hasFlag :: ArgumentKey -> Arguments -> Bool
+    hasFlag flag = elem (flag, "")
 
 
-    withCommandLine :: ((?initialLoad :: Maybe (String, FilePath)) => IO ()) -> IO ()
+    handleInformationRequest :: Arguments -> IO SkipExecution
+    handleInformationRequest args 
+        | hasFlag "version" args = putStrLn "markup-preview 0.1.0.0" >> return True
+        | hasFlag "help" args    = print (helpText [] HelpFormatDefault arguments) >> return True
+        | otherwise              = return False
+
+
+    buildOptions :: Arguments -> StartupOptions
+    buildOptions args = StartupOptions { file=file_option, filetype=filetype_option, can_load=can_load_option } where
+        file_option = lookup "file" args
+        filetype_option = file_option >>= detectFiletype
+        can_load_option = isJust filetype_option
+
+
+    withCommandLine :: ((?startupOptions :: StartupOptions) => IO ()) -> IO ()
     withCommandLine f = do
         args <- processArgs arguments
-        let hasFlag flag = (flag, "") `elem` args
-        let ?initialLoad = lookup "file" args >>= getArgumentFile
-        if hasFlag "help"
-            then print $ helpText [] HelpFormatDefault arguments
-            else f
+        skip <- handleInformationRequest args
+        if skip
+            then return ()
+            else let ?startupOptions = buildOptions args in f

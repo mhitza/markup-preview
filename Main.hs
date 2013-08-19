@@ -18,14 +18,14 @@ module Main where
     loop a f = f a >>= \a' -> loop a' f
 
 
-    createLoadNotifier :: Maybe a -> IO (MVar a)
-    createLoadNotifier Nothing  = newEmptyMVar
-    createLoadNotifier (Just x) = newMVar x
+    createLoadNotifier :: StartupOptions -> IO (MVar (String, FilePath))
+    createLoadNotifier o | can_load o = newMVar (fromJust $ filetype o, fromJust $ file o)
+                         | otherwise = newEmptyMVar
 
 
     main :: IO ()
     main = withCommandLine $ withGUI $ do
-        loadNotifier <- createLoadNotifier ?initialLoad
+        loadNotifier <- createLoadNotifier ?startupOptions
         (window, webView) <- createInterface loadNotifier
         let loadInsideView r = renderHtml r >>= loadFile webView
         void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
