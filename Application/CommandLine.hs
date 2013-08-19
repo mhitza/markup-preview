@@ -6,6 +6,8 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
     import System.Console.CmdArgs.Explicit
 
     import Data.Maybe
+    import Data.List
+    import Control.Monad
 
 
     type SkipExecution = Bool
@@ -22,12 +24,22 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
     arguments = mode "markup-preview" [] "" (flagArg (upd "file") "file")
         [ flagHelpSimple (("help",""):)
         , flagVersion (("version",""):)
+        , flagNone ["markdown"] (setKey "force-type" "Markdown") "Treat file as Markdown" 
+        , flagNone ["textile"] (setKey "force-type" "Textile") "Treat file as Textile" 
+        , flagNone ["rst"] (setKey "force-type" "reStructuredText") "Treat file as reStructuredText" 
         ]
         where upd msg x v = Right $ (msg,x):v
+              setKey key v xs = case findIndex (\(k,_) -> k == key) xs of
+                                    Just _  -> map (\x@(k,_) -> if key == k then (k,v) else x) xs
+                                    Nothing -> (key,v):xs
 
 
     hasFlag :: ArgumentKey -> Arguments -> Bool
-    hasFlag flag = elem (flag, "")
+    hasFlag flag = isJust . findIndex (\(k,_) -> k == flag)
+
+
+    getFlag :: ArgumentKey -> Arguments -> Maybe String
+    getFlag flag = listToMaybe . map snd . filter (\(k,_) -> k == flag)
 
 
     handleInformationRequest :: Arguments -> IO SkipExecution
@@ -39,15 +51,14 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
 
     buildOptions :: Arguments -> StartupOptions
     buildOptions args = StartupOptions { file=file_option, filetype=filetype_option, can_load=can_load_option } where
-        file_option = lookup "file" args
-        filetype_option = file_option >>= detectFiletype
+        file_option = getFlag "file" args
         can_load_option = isJust filetype_option
+        filetype_option | hasFlag "force-type" args = getFlag "force-type" args
+                        | otherwise                 = file_option >>= detectFiletype
 
 
     withCommandLine :: ((?startupOptions :: StartupOptions) => IO ()) -> IO ()
     withCommandLine f = do
         args <- processArgs arguments
         skip <- handleInformationRequest args
-        if skip
-            then return ()
-            else let ?startupOptions = buildOptions args in f
+        unless skip $ let ?startupOptions = buildOptions args in f
