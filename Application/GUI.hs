@@ -1,4 +1,4 @@
-module Application.GUI (withGUI, createInterface, webViewLoadUri) where
+module Application.GUI (withGUI, createInterface, webViewLoadHtmlString, webViewLoadString) where
 
     import Graphics.UI.Gtk
     import Graphics.UI.Gtk.WebKit.WebView

@@ -2,9 +2,6 @@
 module Application.FileHandling (detectFiletype, renderHtml) where
 
     import Text.Pandoc
-    import GHC.IO.Handle
-    import System.Directory
-    import System.IO.Temp
 
 #ifdef CABAL
     import Paths_markup_preview
@@ -32,15 +29,11 @@ module Application.FileHandling (detectFiletype, renderHtml) where
 #endif
 
 
-    renderHtml :: (String, FilePath) -> IO String
+    renderHtml :: (String, FilePath) -> IO (String, FilePath)
     renderHtml (format, filepath) = readFile filepath >>= writeHtmlFile where
         readerF = fromJust $ lookup format [("Markdown", readMarkdown), ("reStructuredText", readRST), ("Textile", readTextile)]
         writer = writeHtmlString def
         reader = readerF (def { readerStandalone = True })
         writeHtmlFile content = do
-            tempDirectory <- getTemporaryDirectory
             layout <- readResource "Resources/layout.html"
-            let htmlContent = renderTemplate [("htmlContent", writer $ reader content)] layout
-            (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview.html"
-            hPutStr tempHandle htmlContent >> hFlush tempHandle
-            return ("file://" ++ tempFilePath)
+            return $ (renderTemplate [("htmlContent", writer $ reader content)] layout, filepath)

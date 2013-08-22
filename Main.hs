@@ -9,6 +9,7 @@ module Main where
     import Control.Monad
     import Control.Concurrent
     import Data.Maybe
+    import Data.List.Utils
 
     -- transformation related imports
     import System.Directory
@@ -22,12 +23,14 @@ module Main where
     createLoadNotifier o | canLoad o = newMVar (fromJust $ filetype o, fromJust $ file o)
                          | otherwise = newEmptyMVar
 
-
+    
     main :: IO ()
     main = withCommandLine $ withGUI $ do
         loadNotifier <- createLoadNotifier ?startupOptions
         (window, webView) <- createInterface loadNotifier
-        let loadInsideView r = renderHtml r >>= webViewLoadUri webView
+        let loadInsideView r = renderHtml r >>= \(content, filepath) -> do
+            print content
+            webViewLoadString webView content Nothing Nothing (("file://" ++) . Data.List.Utils.join "/" . init $ split "/" filepath)
         void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
             threadDelay 500
             if isNothing resource || isNothing modificationTime
