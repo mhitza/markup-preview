@@ -6,7 +6,6 @@ module Application.GUI (withGUI, createInterface, webViewLoadUri) where
     import Control.Monad
     import Control.Monad.Trans
     import Control.Monad.Trans.Maybe
-    import Data.Maybe
     import Control.Concurrent.MVar
 
 
@@ -40,13 +39,11 @@ module Application.GUI (withGUI, createInterface, webViewLoadUri) where
         void $ onToolButtonClicked openButton $ do
             openDialog <- createOpenDialog
             dialogResponse' <- dialogRun openDialog
-            when (dialogResponse' == ResponseAccept) $ do
-                response' <- runMaybeT $ do
-                    filepath <- MaybeT $ fileChooserGetFilename openDialog
-                    fileFilter <- MaybeT $  fileChooserGetFilter openDialog
-                    format <- lift $ fileFilterGetName fileFilter 
-                    return (format, filepath)
-                when (isJust response') $ putMVar loadNotifier (fromJust response')
+            when (dialogResponse' == ResponseAccept) $ void . runMaybeT $ do
+                filepath <- MaybeT $ fileChooserGetFilename openDialog
+                fileFilter <- MaybeT $  fileChooserGetFilter openDialog
+                format <- lift $ fileFilterGetName fileFilter 
+                lift $ putMVar loadNotifier (format, filepath)
             widgetDestroy openDialog
 
         toolbarInsert toolbar openButton 0
