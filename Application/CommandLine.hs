@@ -15,9 +15,7 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
     type Arguments = [(ArgumentKey, String)]
 
     data StartupOptions = StartupOptions
-                        { file :: Maybe FilePath
-                        , filetype :: Maybe String
-                        , canLoad :: Bool }
+                        { startupFile :: Maybe (String, FilePath) }
 
 
     arguments :: Mode Arguments
@@ -50,11 +48,11 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
 
 
     buildOptions :: Arguments -> StartupOptions
-    buildOptions args = StartupOptions { file=file_option, filetype=filetype_option, canLoad=can_load_option } where
-        file_option = getFlag "file" args
-        can_load_option = isJust filetype_option
-        filetype_option | hasFlag "force-type" args = getFlag "force-type" args
-                        | otherwise                 = file_option >>= detectFiletype
+    buildOptions args = StartupOptions { startupFile=startupFile' } where
+        startupFile' = do
+            filepath' <- getFlag "file" args
+            filetype' <- if hasFlag "force-type" args then getFlag "force-type" args else detectFiletype filepath'
+            return (filetype', filepath')
 
 
     withCommandLine :: ((?startupOptions :: StartupOptions) => IO ()) -> IO ()
