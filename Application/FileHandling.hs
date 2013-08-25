@@ -3,7 +3,6 @@ module Application.FileHandling (detectFiletype, renderHtml) where
 
     import Text.Pandoc
     import GHC.IO.Handle
-    import System.Directory
     import System.IO.Temp
 
 #ifdef CABAL
@@ -12,6 +11,7 @@ module Application.FileHandling (detectFiletype, renderHtml) where
 
     import Control.Applicative
     import Data.List
+    import Data.List.Utils
     import Data.Maybe
 
 
@@ -38,7 +38,8 @@ module Application.FileHandling (detectFiletype, renderHtml) where
         writer = writeHtmlString def
         reader = readerF (def { readerStandalone = True })
         writeHtmlFile content = do
-            tempDirectory <- getTemporaryDirectory
+            -- make this cross OS path style handling
+            let tempDirectory = (++ "/") . join "/" . init . split "/" $ filepath
             layout <- readResource "Resources/layout.html"
             let htmlContent = renderTemplate [("htmlContent", writer $ reader content)] layout
             (tempFilePath, tempHandle) <- openTempFile tempDirectory "markup-preview.html"

@@ -27,7 +27,7 @@ module Main where
     main = withCommandLine $ withGUI $ do
         loadNotifier <- createLoadNotifier ?startupOptions
         (window, webView) <- createInterface loadNotifier
-        let loadInsideView r = renderHtml r >>= webViewLoadUri webView
+        let loadInsideView r = renderHtml r >>= handleResource webView
         void . forkIO . void $ loop (Nothing, Nothing) $ \(resource, modificationTime) -> do
             threadDelay 500
             if isNothing resource || isNothing modificationTime

@@ -1,12 +1,28 @@
-module Application.GUI (withGUI, createInterface, webViewLoadUri) where
+module Application.GUI (withGUI, createInterface, handleResource) where
 
     import Graphics.UI.Gtk
     import Graphics.UI.Gtk.WebKit.WebView
+    import System.Directory
 
     import Control.Monad
     import Control.Monad.Trans
     import Control.Monad.Trans.Maybe
-    import Control.Concurrent.MVar
+    import Control.Concurrent
+
+
+    handleSignalOnce :: GObjectClass obj => ((t -> IO ()) -> IO (ConnectId obj)) -> t1 -> (t1 -> IO a) -> IO ()
+    handleSignalOnce signalSetup callbackData callback = do
+        let letItEnd mv = putMVar mv True
+        m <- newEmptyMVar
+        connectId <- signalSetup $ \_ -> callback callbackData >> letItEnd m
+        void . forkIO $ takeMVar m >> signalDisconnect connectId
+        return ()
+
+
+    handleResource :: WebViewClass obj => obj -> String -> IO ()
+    handleResource webView path = do
+        webViewLoadUri webView path
+        void . forkIO $ handleSignalOnce (on webView loadFinished) path $ \p -> removeFile (drop 7 p) -- remove 'file://'; ugly hack I repent
 
 
     createFilter :: String -> [String] -> IO FileFilter
