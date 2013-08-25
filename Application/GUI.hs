@@ -1,5 +1,7 @@
 module Application.GUI (withGUI, createInterface, handleResource) where
 
+    import Application.Types
+
     import Graphics.UI.Gtk
     import Graphics.UI.Gtk.WebKit.WebView
     import System.Directory
@@ -47,7 +49,7 @@ module Application.GUI (withGUI, createInterface, handleResource) where
         return dialog
 
 
-    createToolbar :: MVar (String, FilePath) -> IO Toolbar
+    createToolbar :: MVar (FileType, FilePath) -> IO Toolbar
     createToolbar loadNotifier = do
         toolbar <- toolbarNew
         toolbarSetStyle toolbar ToolbarIcons
@@ -59,7 +61,7 @@ module Application.GUI (withGUI, createInterface, handleResource) where
                 filepath <- MaybeT $ fileChooserGetFilename openDialog
                 fileFilter <- MaybeT $  fileChooserGetFilter openDialog
                 format <- lift $ fileFilterGetName fileFilter 
-                lift $ putMVar loadNotifier (format, filepath)
+                lift $ putMVar loadNotifier (read format, filepath)
             widgetDestroy openDialog
 
         toolbarInsert toolbar openButton 0
@@ -67,7 +69,7 @@ module Application.GUI (withGUI, createInterface, handleResource) where
         return toolbar
 
 
-    createInterface :: MVar (String, FilePath) -> IO (Window, WebView)
+    createInterface :: MVar (FileType, FilePath) -> IO (Window, WebView)
     createInterface loadNotifier = do
         window <- windowNew
         scrolledWindow <- scrolledWindowNew Nothing Nothing

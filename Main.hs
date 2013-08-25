@@ -1,6 +1,7 @@
 {-# LANGUAGE ImplicitParams #-}
 module Main where
 
+    import Application.Types
     import Application.GUI
     import Application.CommandLine
     import Application.FileHandling
@@ -18,7 +19,7 @@ module Main where
     loop a f = f a >>= \a' -> loop a' f
 
 
-    createLoadNotifier :: Maybe (String, FilePath) -> IO (MVar (String, FilePath))
+    createLoadNotifier :: Maybe (FileType, FilePath) -> IO (MVar (FileType, FilePath))
     createLoadNotifier (Just (ft,fp)) = newMVar (ft, fp)
     createLoadNotifier Nothing        = newEmptyMVar
 

@@ -1,6 +1,8 @@
 {-# LANGUAGE CPP #-}
 module Application.FileHandling (detectFiletype, renderHtml) where
 
+    import Application.Types
+
     import Text.Pandoc
     import GHC.IO.Handle
     import System.IO.Temp
@@ -15,11 +17,11 @@ module Application.FileHandling (detectFiletype, renderHtml) where
     import Data.Maybe
 
 
-    detectFiletype :: FilePath -> Maybe String
+    detectFiletype :: FilePath -> Maybe FileType
     detectFiletype filepath = fst <$> find (any (`isSuffixOf` filepath) . snd)
-                            [ ("Markdown", [".markdown", ".md"])
-                            , ("Textile", [".textile"])
-                            , ("reStructuredText", [".rst", ".rest", ".restx"]) ]
+                            [ (Markdown, [".markdown", ".md"])
+                            , (Textile, [".textile"])
+                            , (ReStructuredText, [".rst", ".rest", ".restx"]) ]
 
 
     readResource :: FilePath -> IO String
@@ -32,9 +34,9 @@ module Application.FileHandling (detectFiletype, renderHtml) where
 #endif
 
 
-    renderHtml :: (String, FilePath) -> IO String
+    renderHtml :: (FileType, FilePath) -> IO String
     renderHtml (format, filepath) = readFile filepath >>= writeHtmlFile where
-        readerF = fromJust $ lookup format [("Markdown", readMarkdown), ("reStructuredText", readRST), ("Textile", readTextile)]
+        readerF = fromJust $ lookup format [(Markdown, readMarkdown), (ReStructuredText, readRST), (Textile, readTextile)]
         writer = writeHtmlString def
         reader = readerF (def { readerStandalone = True })
         writeHtmlFile content = do

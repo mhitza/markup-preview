@@ -31,5 +31,6 @@ executable markup-preview
   other-modules:       Paths_markup_preview,
                        Application.FileHandling,
                        Application.CommandLine,
-                       Application.GUI
+                       Application.GUI,
+                       Application.Types
   build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, cmdargs, MissingH, glib

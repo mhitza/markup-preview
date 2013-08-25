@@ -1,6 +1,7 @@
 {-# LANGUAGE ImplicitParams, RankNTypes #-}
-module Application.CommandLine (withCommandLine, StartupOptions(..)) where
+module Application.CommandLine (withCommandLine) where
 
+    import Application.Types
     import Application.FileHandling
 
     import System.Console.CmdArgs.Explicit
@@ -14,9 +15,6 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
     type ArgumentKey = String
     type Arguments = [(ArgumentKey, String)]
 
-    data StartupOptions = StartupOptions
-                        { startupFile :: Maybe (String, FilePath) }
-
 
     arguments :: Mode Arguments
     arguments = mode "markup-preview" [] "" (flagArg (upd "file") "file")
@@ -24,7 +22,7 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
         , flagVersion (("version",""):)
         , flagNone ["markdown"] (setKey "force-type" "Markdown") "Treat file as Markdown" 
         , flagNone ["textile"] (setKey "force-type" "Textile") "Treat file as Textile" 
-        , flagNone ["rst"] (setKey "force-type" "reStructuredText") "Treat file as reStructuredText" 
+        , flagNone ["rst"] (setKey "force-type" "ReStructuredText") "Treat file as reStructuredText" 
         ]
         where upd msg x v = Right $ (msg,x):v
               setKey key v xs = case findIndex (\(k,_) -> k == key) xs of
@@ -51,7 +49,7 @@ module Application.CommandLine (withCommandLine, StartupOptions(..)) where
     buildOptions args = StartupOptions { startupFile=startupFile' } where
         startupFile' = do
             filepath' <- getFlag "file" args
-            filetype' <- if hasFlag "force-type" args then getFlag "force-type" args else detectFiletype filepath'
+            filetype' <- if hasFlag "force-type" args then fmap read $ getFlag "force-type" args else detectFiletype filepath'
             return (filetype', filepath')
 
 
