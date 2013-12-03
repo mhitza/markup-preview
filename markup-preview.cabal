@@ -33,4 +33,4 @@ executable markup-preview
                        Application.CommandLine,
                        Application.GUI,
                        Application.Types
-  build-depends:       base == 4.*, gtk, webkit, pandoc, directory, temporary, transformers, mtl, cmdargs, MissingH, glib
+  build-depends:       base == 4.*, gtk, webkit, pandoc == 1.10, directory, temporary, transformers, mtl, cmdargs, MissingH, glib
