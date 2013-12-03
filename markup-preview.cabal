@@ -1,5 +1,5 @@
 name:                markup-preview
-version:             0.2.0.1
+version:             0.2.0.2
 synopsis:            A simple markup document preview (markdown, textile, reStructuredText)
 description:         
     A GUI application that renders the markup documents (markdown, textile, reStructuredText) into
