@@ -53,7 +53,7 @@ module Application.GUI (withGUI, createInterface, handleResource) where
     createToolbar loadNotifier = do
         toolbar <- toolbarNew
         toolbarSetStyle toolbar ToolbarIcons
-        openButton <- toolButtonNewFromStock "gtk-open"
+        openButton <- toolButtonNewFromStock stockOpen
         void $ onToolButtonClicked openButton $ do
             openDialog <- createOpenDialog
             dialogResponse' <- dialogRun openDialog
