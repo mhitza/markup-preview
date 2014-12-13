@@ -33,4 +33,14 @@ executable markup-preview
                        Application.CommandLine,
                        Application.GUI,
                        Application.Types
-  build-depends:       base == 4.*, gtk, webkit, pandoc == 1.10, directory, temporary, transformers, mtl, cmdargs, MissingH, glib
+  build-depends:       base >= 4.6 && <= 4.7,
+                       gtk == 0.12.*,
+                       webkit == 0.12.*,
+                       pandoc == 1.10.*,
+                       directory == 1.2.*,
+                       temporary == 1.1.*,
+                       transformers == 0.3.*,
+                       mtl == 2.1.*,
+                       cmdargs == 0.10.*,
+                       MissingH == 1.2.*,
+                       glib == 0.12.*
