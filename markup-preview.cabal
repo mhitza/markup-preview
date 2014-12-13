@@ -36,7 +36,7 @@ executable markup-preview
   build-depends:       base >= 4.6 && <= 4.7,
                        gtk == 0.13.*,
                        webkit == 0.13.*,
-                       pandoc == 1.12.*,
+                       pandoc == 1.12.* || == 1.13.1,
                        directory == 1.2.*,
                        temporary == 1.1.*,
                        transformers == 0.3.*,
