@@ -1,5 +1,5 @@
 name:                markup-preview
-version:             0.2.2.0
+version:             0.2.2.1
 synopsis:            A simple markup document preview (markdown, textile, reStructuredText)
 description:         
     A GUI application that renders the markup documents (markdown, textile, reStructuredText) into
@@ -10,7 +10,7 @@ description:
     .
     * Added command line options e.g. markup file can be specified when starting the program.
 
-license:             OtherLicense
+license:             GPL-2
 license-file:        LICENSE
 author:              Marius Ghita
 maintainer:          mhitza@gmail.com
@@ -34,6 +34,7 @@ executable markup-preview
                        Application.GUI,
                        Application.Types
   build-depends:       base >= 4.6 && <= 4.8,
+                       gtk2hs-buildtools,
                        gtk == 0.13.*,
                        webkit == 0.13.*,
                        pandoc == 1.12.* || == 1.13.1,
